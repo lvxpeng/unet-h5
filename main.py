@@ -6,22 +6,35 @@ import tensorflow as tf
 
 
 # 调整显存使用情况，避免显存占满
+# 调整显存使用情况，避免显存占满
 config = ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
 
 data_train, data_test = dataset()
 
-# unet
+# 使用已经编译好的模型
+from tensorflow.keras.optimizers import Adam
+
 model = unet()
-model.compile(optimizer='adagrad', loss='binary_crossentropy', metrics=['acc'])
-# fcn
-# model = fcn()
-# model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+optimizer = Adam(learning_rate=1e-5, clipvalue=0.5)  # 添加梯度裁剪并降低学习率
+model.compile(optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"])
 
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./log", histogram_freq=1)
-model.fit(data_train, epochs=100, batch_size = 8, validation_data=data_test, callbacks = [tensorboard_callback])
+# 添加回调函数
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, TensorBoard
 
-model.save('unet_model.h5')
-# 加载保存的模型
-# new_model=tf.keras.models.load_model('FCN_model.h5')
+#early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1e-7)
+
+tensorboard_callback = TensorBoard(log_dir="./log", histogram_freq=1)
+
+# 开始训练
+history = model.fit(
+    data_train,
+    epochs=300,
+    validation_data=data_test,
+    callbacks=[ reduce_lr, tensorboard_callback]
+)
+
+# 保存模型
+model.save('unet_model.hdf5')
