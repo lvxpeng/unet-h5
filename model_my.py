@@ -5,72 +5,7 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.applications import VGG16
 
 
-
-# def fcn(pretrained_weights=None, input_size=(256, 256, 3)):
-#     # 加载vgg16
-#     conv_base = VGG16(weights='imagenet', input_shape=input_size, include_top=False)
-#
-#     # 现在创建多输出模型,三个output
-#     layer_names = [
-#         'block5_conv3',
-#         'block4_conv3',
-#         'block3_conv3',
-#         'block5_pool']
-#
-#     # 得到这几个曾输出的列表，为了方便就直接使用列表推倒式了
-#     layers_output = [conv_base.get_layer(layer_name).output for layer_name in layer_names]
-#
-#     # 创建一个多输出模型，这样一张图片经过这个网络之后，就会有多个输出值了
-#     multiout_model = Model(inputs=conv_base.input, outputs=layers_output)
-#
-#     multiout_model.trainable = True
-#     inputs = Input(shape=input_size)
-#
-#     # 这个多输出模型会输出多个值，因此前面用多个参数来接收即可。
-#     out_block5_conv3, out_block4_conv3, out_block3_conv3, out = multiout_model(inputs)
-#
-#     # 现在将最后一层输出的结果进行上采样,然后分别和中间层多输出的结果进行相加，实现跳级连接
-#     x1 = Conv2DTranspose(512, 3, strides=2, padding='same', activation='relu')(out)
-#
-#     # 上采样之后再加上一层卷积来提取特征
-#     x1 = Conv2D(512, 3, padding='same', activation='relu')(x1)
-#
-#     # 与多输出结果的倒数第二层进行相加，shape不变
-#     x2 = tf.add(x1, out_block5_conv3)
-#
-#     # x2进行上采样
-#     x2 = Conv2DTranspose(512, 3, strides=2, padding='same', activation='relu')(x2)
-#     # 直接拿到x3，不使用
-#     x3 = tf.add(x2, out_block4_conv3)
-#
-#     # x3进行上采样
-#     x3 = Conv2DTranspose(256, 3, strides=2, padding='same', activation='relu')(x3)
-#
-#     # 增加卷积提取特征
-#     x3 = Conv2D(256, 3, padding='same', activation='relu')(x3)
-#     x4 = tf.add(x3, out_block3_conv3)
-#
-#     # x4还需要再次进行上采样，得到和原图一样大小的图片，再进行分类
-#     x5 = Conv2DTranspose(128, 3, strides=2, padding='same', activation='relu')(x4)
-#
-#     # 继续进行卷积提取特征
-#     x5 = Conv2D(128, 3, padding='same', activation='relu')(x5)
-#
-#     # 最后一步，图像还原
-#     preditcion = tf.keras.layers.Conv2DTranspose(3, 3, strides=2, padding='same', activation='softmax')(x5)
-#
-#     model = Model(inputs=inputs, outputs=preditcion)
-#     model.summary()
-#
-#     # 加载预训练模型
-#     if (pretrained_weights):
-#         model.load_weights(pretrained_weights)
-#
-#     return model
-
-
-
-def unet(pretrained_weights=None, input_size=(256, 256, 3)):
+def unet(pretrained_weights=None, input_size=(512, 512, 1)):
     inputs = Input(input_size)
     conv1 = Conv2D(
         64, 3, activation="relu", padding="same", kernel_initializer="he_normal"
